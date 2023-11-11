@@ -1,7 +1,4 @@
-#![feature(array_zip)]
-#![feature(int_log)]
 #![feature(trait_alias)]
-#![feature(return_position_impl_trait_in_trait)]
 #![allow(incomplete_features)]
 #![warn(clippy::useless_conversion)]
 

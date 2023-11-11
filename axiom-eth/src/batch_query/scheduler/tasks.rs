@@ -91,6 +91,7 @@ impl scheduler::Task for ResponseTask {
                 let (queries1, queries2) = input.queries.split_at(mid);
                 let (not_empty1, not_empty2) = input.not_empty.split_at(mid);
                 [block_responses1, block_responses2]
+                    .into_iter()
                     .zip([queries1, queries2])
                     .zip([not_empty1, not_empty2])
                     .map(|((block_responses, queries), not_empty)| MultiAccountCircuit {
@@ -99,6 +100,7 @@ impl scheduler::Task for ResponseTask {
                         not_empty: not_empty.to_vec(),
                     })
                     .map(ResponseInput::Account)
+                    .collect()
             }
             ResponseInput::Storage(input) => {
                 let (block_responses1, block_responses2) = input.block_responses.split_at(mid);
@@ -107,6 +109,7 @@ impl scheduler::Task for ResponseTask {
                 let (queries1, queries2) = input.queries.split_at(mid);
                 let (not_empty1, not_empty2) = input.not_empty.split_at(mid);
                 [block_responses1, block_responses2]
+                    .into_iter()
                     .zip([account_responses1, account_responses2])
                     .zip([queries1, queries2])
                     .zip([not_empty1, not_empty2])
@@ -119,6 +122,7 @@ impl scheduler::Task for ResponseTask {
                         }
                     })
                     .map(ResponseInput::Storage)
+                    .collect::<Vec<_>>()
             }
             ResponseInput::Row(input) => {
                 let (responses1, responses2) = input.responses.split_at(mid);
@@ -128,6 +132,7 @@ impl scheduler::Task for ResponseTask {
                 let (storage_not_empty1, storage_not_empty2) =
                     input.storage_not_empty.split_at(mid);
                 [responses1, responses2]
+                    .into_iter()
                     .zip([block_not_empty1, block_not_empty2])
                     .zip([account_not_empty1, account_not_empty2])
                     .zip([storage_not_empty1, storage_not_empty2])
@@ -143,6 +148,7 @@ impl scheduler::Task for ResponseTask {
                         },
                     )
                     .map(ResponseInput::Row)
+                    .collect::<Vec<_>>()
             }
         };
         let next_schema = self.schema.next();
