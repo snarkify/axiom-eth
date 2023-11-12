@@ -76,14 +76,13 @@ pub struct EthConfigPinning {
     pub break_points: RlcThreadBreakPoints,
 }
 
+// This is a hack for the demo purpose since we haven't built the config in to the docker
+const GOERLI_2_JSON_STR: &str = r#"{"params": {"degree": 15, "num_rlc_columns": 1, "num_range_advice": [12, 4, 0], "num_lookup_advice": [1, 1, 0], "num_fixed": 1, "unusable_rows": 59, "keccak_rows_per_round": 50, "lookup_bits": 8}, "break_points": {"gate": [[32656, 32657, 32658, 32658, 32656, 32658, 32656, 32657, 32658, 32657, 32658], [32658, 32658, 32657], []], "rlc": []}}"#;
 impl Halo2ConfigPinning for EthConfigPinning {
     type BreakPoints = RlcThreadBreakPoints;
 
     fn from_path<P: AsRef<Path>>(path: P) -> Self {
-        let pinning: Self = serde_json::from_reader(
-            File::open(&path)
-                .unwrap_or_else(|e| panic!("{:?} does not exist: {e:?}", path.as_ref())),
-        )
+        let pinning: Self = serde_json::from_str(GOERLI_2_JSON_STR)
         .unwrap();
         pinning.set_var();
         pinning

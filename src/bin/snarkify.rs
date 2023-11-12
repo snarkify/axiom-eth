@@ -66,7 +66,7 @@ impl ProofHandler for BlockHeaderProver {
                 let snark = scheduler.get_snark(task);
                 let encoded_proof = BS64.encode(snark.proof);
                 tx_clone.send(encoded_proof).expect("Failed to send data");
-            });
+            }).join().expect("Unexpected failure!");
         }
 
         let proof = rx.recv().unwrap();
