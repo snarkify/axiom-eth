@@ -81,7 +81,7 @@ const GOERLI_2_JSON_STR: &str = r#"{"params": {"degree": 15, "num_rlc_columns": 
 impl Halo2ConfigPinning for EthConfigPinning {
     type BreakPoints = RlcThreadBreakPoints;
 
-    fn from_path<P: AsRef<Path>>(path: P) -> Self {
+    fn from_path<P: AsRef<Path>>(_path: P) -> Self {
         let pinning: Self = serde_json::from_str(GOERLI_2_JSON_STR)
         .unwrap();
         pinning.set_var();

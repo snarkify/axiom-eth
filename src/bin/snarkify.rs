@@ -5,11 +5,33 @@ use axiom_eth::{
     util::scheduler::Scheduler,
     Network,
 };
-use std::{cmp::min, path::PathBuf, thread};
+use std::{cmp::min, fs, path::PathBuf, thread};
 use std::sync::mpsc;
 use base64::{engine::general_purpose::STANDARD as BS64, Engine};
 use serde::{Deserialize, Serialize};
 use snarkify_sdk::prover::ProofHandler;
+use reqwest::blocking::Response;
+use std::io::Write;
+use std::path::Path;
+
+fn download_file(url: &str, output_path: &str) {
+    // Send a GET request to the specified URL
+    let response: Response = reqwest::blocking::get(url).expect("Download Failed");
+
+    // Check if the request was successful
+    if response.status().is_success() {
+        let path = Path::new(output_path);
+        if let Some(dir_path) = path.parent() {
+            fs::create_dir_all(dir_path).expect("Create dir Failed");
+        }
+        let mut file = fs::File::create(output_path).expect("Create file Failed");
+
+        // Write the response body to the file
+        file.write_all(response.bytes().unwrap().as_ref()).expect("Save Failed");
+    } else {
+        panic!("Download failed!")
+    }
+}
 
 
 #[derive(Deserialize)]
@@ -37,7 +59,11 @@ impl ProofHandler for BlockHeaderProver {
         let network = Network::Goerli;
         let srs_readonly = true;
 
-
+        thread::spawn(|| {
+            download_file("https://github.com/snarkify/axiom-eth/raw/snarkify/params/kzg_bn254_15.srs",
+              "params/kzg_bn254_15.srs");
+            println!("Params file downloaded!");
+        }).join().expect("Download failed!");
         #[cfg(feature = "display")]
         let start = start_timer!(|| format!(
             "Generating SNARKs for blocks {} to {}, max depth {}, initial depth {}, finality {}",
