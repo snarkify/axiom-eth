@@ -21,6 +21,10 @@ fn download_file(url: &str, output_path: &str) {
     // Check if the request was successful
     if response.status().is_success() {
         let path = Path::new(output_path);
+        if path.is_file() {
+            return
+        }
+
         if let Some(dir_path) = path.parent() {
             fs::create_dir_all(dir_path).expect("Create dir Failed");
         }
@@ -36,7 +40,8 @@ fn download_file(url: &str, output_path: &str) {
 
 #[derive(Deserialize)]
 pub struct Input {
-    block_num: u32,
+    start_block_num: u32,
+    end_block_num: u32,
 }
 
 #[derive(Serialize)]
@@ -52,8 +57,10 @@ impl ProofHandler for BlockHeaderProver {
     type Error = ();
 
     fn prove(input: Self::Input) -> Result<Self::Output, Self::Error> {
-        let start_block_number = input.block_num;
-        let end_block_number = start_block_number;
+        assert!(input.end_block_num >= input.start_block_num, "end_block_num can't be less than start_block_num!");
+        assert!(input.end_block_num < input.start_block_num + 4, "end_block_num has to be within 4 blocks of start_block_num!");
+        let start_block_number = input.start_block_num;
+        let end_block_number = input.end_block_num;
         let initial_depth = 2;
         let max_depth = initial_depth;
         let network = Network::Goerli;
