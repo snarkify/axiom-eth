@@ -5,7 +5,8 @@ use axiom_eth::{
     util::scheduler::Scheduler,
     Network,
 };
-use std::{cmp::min, path::PathBuf};
+use std::{cmp::min, path::PathBuf, thread};
+use std::sync::mpsc;
 use base64::{engine::general_purpose::STANDARD as BS64, Engine};
 use serde::{Deserialize, Serialize};
 use snarkify_sdk::prover::ProofHandler;
@@ -36,13 +37,6 @@ impl ProofHandler for BlockHeaderProver {
         let network = Network::Goerli;
         let srs_readonly = true;
 
-        let scheduler = BlockHeaderScheduler::new(
-            network,
-            srs_readonly,
-            false,
-            PathBuf::from("configs/headers"),
-            PathBuf::from("data/headers"),
-        );
 
         #[cfg(feature = "display")]
         let start = start_timer!(|| format!(
@@ -55,18 +49,30 @@ impl ProofHandler for BlockHeaderProver {
         ));
 
         let circuit_type = CircuitType::new(max_depth, initial_depth, Finality::None, network);
-        let mut snark;
-        let mut encoded_proof = "".to_string();
+        let (tx, rx) = mpsc::channel();
         for start in (start_block_number..=end_block_number).step_by(1 << max_depth) {
             let end = min(start + (1 << max_depth) - 1, end_block_number);
             let task = Task::new(start, end, circuit_type);
-            snark = scheduler.get_snark(task);
-            encoded_proof = BS64.encode(snark.proof);
+            let tx_clone = tx.clone();
+            thread::spawn(move || {
+                let scheduler = BlockHeaderScheduler::new(
+                    network,
+                    srs_readonly,
+                    false,
+                    PathBuf::from("configs/headers"),
+                    PathBuf::from("data/headers"),
+                );
+
+                let snark = scheduler.get_snark(task);
+                let encoded_proof = BS64.encode(snark.proof);
+                tx_clone.send(encoded_proof).expect("Failed to send data");
+            });
         }
 
+        let proof = rx.recv().unwrap();
         #[cfg(feature = "display")]
         end_timer!(start);
-        Ok(Output {proof: encoded_proof})
+        Ok(Output {proof})
     }
 }
 
