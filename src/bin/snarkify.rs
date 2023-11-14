@@ -58,17 +58,17 @@ impl ProofHandler for BlockHeaderProver {
 
     fn prove(input: Self::Input) -> Result<Self::Output, Self::Error> {
         assert!(input.end_block_num >= input.start_block_num, "end_block_num can't be less than start_block_num!");
-        assert!(input.end_block_num < input.start_block_num + 4, "end_block_num has to be within 4 blocks of start_block_num!");
+        assert!(input.end_block_num < input.start_block_num + 128, "end_block_num has to be within 128 blocks of start_block_num!");
         let start_block_number = input.start_block_num;
         let end_block_number = input.end_block_num;
-        let initial_depth = 2;
+        let initial_depth = 7;
         let max_depth = initial_depth;
         let network = Network::Goerli;
         let srs_readonly = true;
 
         thread::spawn(|| {
-            download_file("https://github.com/snarkify/axiom-eth/raw/snarkify/params/kzg_bn254_15.srs",
-              "params/kzg_bn254_15.srs");
+            download_file("https://axiom-crypto.s3.amazonaws.com/challenge_0078/kzg_bn254_19.srs",
+              "params/kzg_bn254_19.srs");
             println!("Params file downloaded!");
         }).join().expect("Download failed!");
         #[cfg(feature = "display")]
@@ -85,9 +85,10 @@ impl ProofHandler for BlockHeaderProver {
         let (tx, rx) = mpsc::channel();
         for start in (start_block_number..=end_block_number).step_by(1 << max_depth) {
             let end = min(start + (1 << max_depth) - 1, end_block_number);
+            println!("Generate proof from block {} to {}", start, end);
             let task = Task::new(start, end, circuit_type);
             let tx_clone = tx.clone();
-            thread::spawn(move || {
+            let result = thread::spawn(move || {
                 let scheduler = BlockHeaderScheduler::new(
                     network,
                     srs_readonly,
@@ -99,7 +100,10 @@ impl ProofHandler for BlockHeaderProver {
                 let snark = scheduler.get_snark(task);
                 let encoded_proof = BS64.encode(snark.proof);
                 tx_clone.send(encoded_proof).expect("Failed to send data");
-            }).join().expect("Unexpected failure!");
+            });
+            if let Err(e) = result.join() {
+                std::panic::resume_unwind(e);
+            }
         }
 
         let proof = rx.recv().unwrap();
