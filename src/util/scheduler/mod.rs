@@ -25,7 +25,7 @@ use crate::Network;
 
 use super::circuit::AnyCircuit;
 
-const GOERLI_JSON_RPC: &str = "https://goerli.infura.io/v3/53295ee28a5040fe9362a2cac9675629";
+const MAIN_JSON_RPC: &str = "https://mainnet.infura.io/v3/28351dbae5794783b176fa8d4620c402";
 /// This is a tag for the type of a circuit, independent of the circuit's inputs.
 /// For example, it can be used to fetch the proving key for the circuit.
 pub trait CircuitType: Clone + Debug + Eq + Hash {
@@ -96,7 +96,7 @@ impl<T: Task> EthScheduler<T> {
         config_dir: PathBuf,
         data_dir: PathBuf,
     ) -> Self {
-        let provider = Provider::new_client(&GOERLI_JSON_RPC, 10, 500)
+        let provider = Provider::new_client(&MAIN_JSON_RPC, 10, 500)
             .expect("could not instantiate HTTP Provider");
         tokio::runtime::Runtime::new().unwrap().block_on(async {
             let chain_id = provider.get_chainid().await.unwrap();

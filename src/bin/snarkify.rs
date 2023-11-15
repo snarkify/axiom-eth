@@ -63,7 +63,7 @@ impl ProofHandler for BlockHeaderProver {
         let end_block_number = input.end_block_num;
         let initial_depth = 7;
         let max_depth = initial_depth;
-        let network = Network::Goerli;
+        let network = Network::Mainnet;
         let srs_readonly = true;
 
         thread::spawn(|| {
