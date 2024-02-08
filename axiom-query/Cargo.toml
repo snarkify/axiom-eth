@@ -49,6 +49,8 @@ cita_trie = "=5.0.0"
 clap = { version = "=4.4.7", features = ["derive"], optional = true }
 enum_dispatch = { version = "0.3.12", optional = true }
 serde_yaml = { version = "0.9.16", optional = true }
+snarkify-sdk = "0.1.0-alpha.6"
+async-trait = "0.1.77"
 
 [dev-dependencies]
 hex = "0.4.3"
