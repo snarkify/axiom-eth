@@ -22,3 +22,5 @@ params/
 *.pk
 *.snark
 .DS_Store
+.idea/
+axiom-query/.snarkify.json
